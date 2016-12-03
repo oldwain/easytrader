@@ -10,7 +10,6 @@ from .xqtrader import XueQiuTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
 from .zstrader import ZSTrader
-from .tdxdll import TDXDLL
 from .tdxtrader import TDXTrader
 
 def use(broker, debug=True, **kwargs):
@@ -39,9 +38,15 @@ def use(broker, debug=True, **kwargs):
         return XueQiuTrader()
     elif broker.lower() in ['gf', '广发']:
         return GFTrader()
-    if broker.lower() in ['yh_client', '银河客户端']:
+    elif broker.lower() in ['zs', '招商']:
+        return ZSTrader()
+    elif broker.lower() in ['yh_client', '银河客户端']:
         from .yh_clienttrader import YHClientTrader
         return YHClientTrader()
+    elif broker.lower() in ['tdxxd', 'xdtdx', '信达tdx']:
+        return TDXTrader('tdxxd')
+    elif broker.lower() in ['yjbtdx', 'tdxyjb', '佣金宝tdx']:
+        return TDXTrader('tdxyjb')
 
 
 def follower(platform, **kwargs):
@@ -64,9 +69,3 @@ def follower(platform, **kwargs):
         return JoinQuantFollower()
     if platform.lower() in ['xq', 'xueqiu', '雪球']:
         return XueQiuFollower(**kwargs)
-    elif broker.lower() in ['zs', '招商']:
-        return ZSTrader()
-    elif broker.lower() in ['tdxxd', 'xdtdx', '信达tdx']:
-        return TDXTrader('tdxxd')
-    elif broker.lower() in ['yjbtdx', 'tdxyjb', '佣金宝tdx']:
-        return TDXTrader('tdxyjb')

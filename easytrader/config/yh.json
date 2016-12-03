@@ -67,9 +67,5 @@
   },
   "account4stock": {
     "service_jsp": "/trade/webtrade/zhgl/holderQuery.jsp"
-  },
-  "ipo_enable_amount": {
-    "service_jsp": "/trade/webtrade/stock/newStockList.jsp"
-}
-
+  }
 }
