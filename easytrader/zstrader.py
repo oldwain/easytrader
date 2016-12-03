@@ -1,6 +1,5 @@
-﻿# coding: utf-8
+# coding: utf-8
 from __future__ import division
-
 
 import os
 import random
@@ -8,95 +7,20 @@ import re
 
 import requests
 
-import pandas as pd
-from bs4 import BeautifulSoup
-
 from . import helpers
 from .helpers import EntrustProp
 from .log import log
 from .webtrader import WebTrader, NotLoginError
 
-from skimage import io
-import numpy as np
-from sklearn.externals import joblib
-
-VERIFY_CODE_POS = 0
 TRADE_MARKET = 1
 HOLDER_NAME = 0
 
-model_file = os.path.join(os.path.dirname(__file__), 'km.model')
-# print (model_file)
-yh_vcode_model_kmeans = joblib.load(model_file)
 
-
-# 用于将一个list按一定步长切片，返回这个list切分后的list
-def slice_list(step=None, num=None, data_list=None):
-    import math
-    if not ((step is None) & (num is None)):
-        if num is not None:
-            step = math.ceil(len(data_list) / num)
-        return [data_list[i: i + step] for i in range(0, len(data_list), step)]
-    else:
-        print("step和num不能同时为空")
-        return False
-
-
-def yh_digit_recognition(file_name):
-    translation = {
-        0: '5',
-        1: '3',
-        2: '6',
-        4: '2',
-        5: '4',
-        6: '9',
-        7: '0',
-        9: '7',
-        10: '1',
-        8: '8'
-    }
-    img = io.imread(file_name, as_grey=True)
-    X = np.empty([1, 288])
-    X = img[:, 0:16].reshape((1, -1))[0]
-    prediction = yh_vcode_model_kmeans.predict(np.array(X))
-
-    result = translation[prediction[0]]
-    return result
-
-
-def denoise(
-        image_name,
-        image_path="yh_vcode",
-        result_path="denoised_vcode",
-):
-    from PIL import Image
-    import numpy
-
-    img = Image.open(os.path.join(image_path, image_name))
-
-    brightness = list()
-    for x in range(img.width):
-        for y in range(img.height):
-            (r, g, b) = img.getpixel((x, y))
-            brightness.append(r + g + b)
-    avgBrightness = int(numpy.mean(brightness))
-
-    for x in range(img.width):
-        for y in range(img.height):
-            (r, g, b) = img.getpixel((x, y))
-            if ((r + g + b) > avgBrightness / 1.5) or (y < 3) or (y > 17) or (x < 5) or (x > (img.width - 5)):
-                img.putpixel((x, y), (256, 256, 256))
-
-    # save denoised result
-    for i in range(0, 4):
-        box = (16 * i, 0, 16 * (i + 1), 18)
-        print(box)
-        img.crop(box).save(os.path.join(result_path, image_name + "_" + str(i)), "bmp")
-
-class YHTrader(WebTrader):
-    config_path = os.path.dirname(__file__) + '/config/yh.json'
+class ZSTrader(WebTrader):
+    config_path = os.path.dirname(__file__) + '/config/zs.json'
 
     def __init__(self):
-        super(YHTrader, self).__init__()
+        super(ZSTrader, self).__init__()
         self.cookie = None
         self.account_config = None
         self.s = None
@@ -107,10 +31,11 @@ class YHTrader(WebTrader):
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko',
         }
         if self.s is not None:
-            self.s.get(self.config['logout_api'])
+            self.s.get(self.config['logout_api'], verify=False)
         self.s = requests.session()
         self.s.headers.update(headers)
-        data = self.s.get(self.config['login_page'])
+        self.s.mount('https://', helpers.Ssl3HttpAdapter())
+        data = self.s.get(self.config['login_page'],verify=False)
 
         # 查找验证码
         verify_code = self.handle_recognize_code()
@@ -122,49 +47,13 @@ class YHTrader(WebTrader):
         if login_status is False and throw:
             raise NotLoginError(result)
 
-        accounts = self.do(self.config['account4stock'])
-        if accounts is False:
-            return False
-        if len(accounts) < 2:
-            raise Exception('无法获取沪深 A 股账户: %s' % accounts)
-        for account in accounts:
-            if account['交易市场'] == '深A':
-                self.exchange_stock_account['0'] = account['股东代码'][0:10]
-            else:
-                self.exchange_stock_account['1'] = account['股东代码'][0:10]
         return login_status
-
-    def download_verify_code(self):
-        import time
-        i = 0
-        self.s = requests.Session()
-        while True:
-            i += 1
-            # 获取验证码
-            res = self.s.get("https://www.chinastock.com.cn/trade/webtrade/login.jsp")
-            verify_code_response = self.s.get(
-                self.config['verify_code_api'],
-                params=dict(updateverify=random.random()),
-                headers={
-                    "Accept": "*/*",
-                    "Accept-Encoding": "gzip, deflate",
-                    "Accept-Language": "zh-CN",
-                    "Connection": "Keep-Alive",
-                    "Host": "www.chinastock.com.cn",
-                    "Referer": "https://www.chinastock.com.cn/trade/webtrade/login.jsp",
-                    "User-Agent": "Mozilla/4.0(compatible;MSIE,7.0;Windows NT 10.0; WOW64;Trident / 7.0;.NET4.0C;.NET4.0E;.NET CLR2.0.50727;.NET CLR 3.0.30729;.NET CLR 3.5.30729;InfoPath.3)"
-                }
-            )
-            image_path = os.path.join(os.getcwd()+"/yh_vcode", str(i))
-            with open(image_path, 'wb') as f:
-                f.write(verify_code_response.content)
-            time.sleep(5)
 
     def handle_recognize_code(self):
         """获取并识别返回的验证码
         :return:失败返回 False 成功返回 验证码"""
         # 获取验证码
-        res = self.s.get("https://www.chinastock.com.cn/trade/webtrade/login.jsp")
+        res = self.s.get(self.config['login_page'])
         verify_code_response = self.s.get(
             self.config['verify_code_api'],
             params=dict(updateverify=random.random()),
@@ -173,10 +62,12 @@ class YHTrader(WebTrader):
                 "Accept-Encoding": "gzip, deflate",
                 "Accept-Language": "zh-CN",
                 "Connection": "Keep-Alive",
-                "Host": "www.chinastock.com.cn",
-                "Referer": "https://www.chinastock.com.cn/trade/webtrade/login.jsp",
+                "Host": "etrade.newone.com.cn",
+                "Referer": "https://etrade.newone.com.cn/include/loginFormNew.jsp",
                 "User-Agent": "Mozilla/4.0(compatible;MSIE,7.0;Windows NT 10.0; WOW64;Trident / 7.0;.NET4.0C;.NET4.0E;.NET CLR2.0.50727;.NET CLR 3.0.30729;.NET CLR 3.5.30729;InfoPath.3)"
-            }
+
+            },
+            verify=False
         )
         # print(verify_code_response.url)
         # 保存验证码
@@ -184,31 +75,22 @@ class YHTrader(WebTrader):
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
-        # 图片预处理
-        denoise("vcode",os.getcwd(),result_path="")
-
-        # 逐个数字识别
-        result = ""
-        for i in range(0,4):
-            result += yh_digit_recognition("vcode_%d"%i)
-        log.debug('verify code detect result: %s' % result)
-        print('验证码识别结果: %s' % result)
+        result = input('input verify code: ')
         return result
 
     def post_login_data(self, verify_code):
         login_params = dict(
             self.config['login'],
-            mac=helpers.get_mac(),
-            clientip='',
-            inputaccount=self.account_config['inputaccount'],
-            trdpwd=self.account_config['trdpwd'],
-            checkword=verify_code
+            mac_addr=helpers.get_mac(),
+            f_khh=self.account_config['account'],
+            f_mm=self.account_config['password'],
+            validatecode=verify_code
         )
         log.debug('login params: %s' % login_params)
-        login_response = self.s.post(self.config['login_api'], params=login_params)
+        login_response = self.s.post(self.config['login_api'], params=login_params, verify=False)
         log.debug('login response: %s' % login_response.text)
 
-        if login_response.text.find('success') != -1:
+        if login_response.text[-200:].find('alert') == -1:
             return True, None
         return False, login_response.text
 
@@ -242,7 +124,7 @@ class YHTrader(WebTrader):
             # print(cancel_list)
         except Exception as e:
             return []
-        if parsed == True:
+        if parsed :
             result = list()
             for item in cancel_list:
                 if len(item) == 12:
@@ -542,26 +424,19 @@ class YHTrader(WebTrader):
         return basic_params
 
     def request(self, params):
-        url = self.trade_prefix + params['service_jsp']
-        r = self.s.get(url, cookies=self.cookie)
+        url = self.trade_prefix + self.config['service_jsp']
+        r = self.s.get(url, params=params, cookies=self.cookie, verify=False)
         if r.status_code != 200:
             return False
         if r.text.find('系统超时请重新登录') != -1:
             return False
-        if params['service_jsp'] == '/trade/webtrade/stock/stock_zjgf_query.jsp':
-            if params['service_type'] == 2:
-                rptext = r.text[0:r.text.find('操作')]
-                return rptext
-            else:
-                rbtext = r.text[r.text.find('操作'):]
-                rbtext += 'yhposition'
-                return rbtext
-        else:
-            return r.text
+        return r.text
 
     def format_response_data(self, data):
-        if data == False:
+        if not data :
             return False
+
+        return data
         # 需要对于银河持仓情况特殊处理
         if data.find('yhposition') != -1:
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
@@ -598,7 +473,6 @@ class YHTrader(WebTrader):
     def check_account_live(self, response):
         if hasattr(response, 'get') and response.get('error_no') == '-1':
             self.heart_active = False
-            raise
 
     def heartbeat(self):
         heartbeat_params = dict(
@@ -616,59 +490,3 @@ class YHTrader(WebTrader):
         log.debug('unlock params: %s' % unlock_params)
         unlock_resp = self.s.post(self.config['unlock'], params=unlock_params)
         log.debug('unlock resp: %s' % unlock_resp.text)
-
-
-    def get_ipo_info(self):
-        """
-        查询新股申购信息
-        :return: (df_taoday_ipo, df_ipo_limit), 分别是当日新股申购列表信息， 申购额度。
-        df_today_ipo
-            代码	名称	价格	账户额度	申购下限	申购上限	证券账号	交易所	发行日期
-        0	2830	名雕股份	16.53	17500	500	xxxxx	xxxxxxxx	深A	20161201
-        1	732098	森特申购	9.18	27000	1000	xxxxx	xxxxxxx	沪A	20161201
-
-        df_ipo_limit:
-            市场	证券账号	账户额度
-        0	深圳	xxxxxxx	xxxxx
-        1	上海	xxxxxxx	xxxxx
-
-        """
-        ipo_response = self.s.get(
-            self.config['ipo_api'],
-            params=dict(),
-            headers={
-                "Accept": "*/*",
-                "Accept-Encoding": "gzip, deflate",
-                "Accept-Language": "zh-CN",
-                "Connection": "Keep-Alive",
-                "Host": "www.chinastock.com.cn",
-                "Referer": "https://www.chinastock.com.cn/trade/webtrade/login.jsp",
-                "User-Agent": "Mozilla/4.0(compatible;MSIE,7.0;Windows NT 10.0; WOW64;Trident / 7.0;.NET4.0C;.NET4.0E;.NET CLR2.0.50727;.NET CLR 3.0.30729;.NET CLR 3.5.30729;InfoPath.3)"
-            })
-        if ipo_response.status_code != 200:
-            return (None, None)
-        html = ipo_response.content
-        soup = BeautifulSoup(html, 'lxml')
-        tables = soup.findAll('table', attrs={'class': 'fee'})
-        df_ipo_limit = pd.read_html(str(tables[0]), flavor='lxml', header=0)[0]
-        df_today_ipo = pd.read_html(str(tables[1]), flavor='lxml', header=0)[0]
-
-        df_today_ipo[['代码']] = df_today_ipo[['代码']].applymap(lambda x: '{:0>6}'.format(x))
-        return (df_today_ipo, df_ipo_limit )
-
-
-    def get_ipo_limit(self, stock_code):
-        """
-        查询当日某只新股申购额度、申购上限、价格。
-        仅为了兼容佣金宝同名方法。 不需要兼容，最好使用get_ipo_info()[0]
-        :param stock_code: 申购代码!!!
-        :return: high_amount(最高申购股数) enable_amount(申购额度) last_price(发行价)
-
-        """
-        (df1,df2) = self.get_ipo_info()
-        if df1 is None:
-            log.debug('查询错误: %s' )
-            return None
-        ser =df1[df1['代码'] == stock_code].ix[0]
-        return dict(high_amount=float(ser['申购上限']), enable_amount=ser['账户额度'],
-                    last_price=float(ser['价格']))

@@ -1,0 +1,74 @@
+{
+  "login_page":"https://etrade.newone.com.cn/include/loginFormNew.jsp",
+  "verify_code_api":"https://etrade.newone.com.cn/validatecode/imgcode",
+  "logout_api": "https://etrade.newone.com.cn/newtrade/view/gupiao/action/check78.jsp",
+  "login_api": "https://etrade.newone.com.cn/xtrade",
+  "service_jsp": "/xtrade",
+  "prefix":"https://etrade.newone.com.cn",
+  "balance":{"jybm":"100040"},
+  "entrust": {"jybm":"100060"},
+  "login": {
+    "target_url": "https%3A%2F%2Fetrade.newone.com.cn%2Fnewone%2Fjsp%2FwebTrade.jsp",
+    "refresh": "window.opener",
+    "f_khh": "",
+    "f_mm": "",
+    "lczh": "",
+    "cxmm": "",
+    "validatecode": "",
+    "jsessionid2": "ZpL2YNvc2vKc2lhhWplVDk4Gvq5vJJKdw56n7gLLxzPSCcQTyh2p%21-1663124153%211477288604460",
+    "jybm": "100000",
+    "firstLogin": "1",
+    "version": "2",
+    "isActive": "1",
+    "macip": "F8-CA-B8-2B-2E-2A%2C10.98.152.25",
+    "from": "putong",
+    "f_yhkh1": "0",
+    "f_yhkh": "0",
+    "f_yybmc": "",
+    "f_yybdm": "",
+    "f_no": "0",
+    "f_jys": "2",
+    "f_khh1": "",
+    "f_mm1": "",
+    "validatecode1": "",
+    "txxl": "https%3A%2F%2Fetrade.newone.com.cn%2Finclude%2FloginFormNew.jsp",
+    "jjzh1": "",
+    "sfzh1": ""
+  },
+  "buy": {
+    "marktype": "",
+    "ajaxFlag": "wt"
+  },
+  "sell": {
+    "ajaxFlag": "wt"
+  },
+  "fundpurchase": {
+    "ajaxFlag": "wt",
+    "bsflag": 3
+  },
+  "fundredemption": {
+    "ajaxFlag": "wt",
+    "bsflag": 4
+  },
+  "fundsubscribe": {
+    "ajaxFlag": "wt",
+    "bsflag": 5
+  },
+  "fundsplit": {
+    "ajaxFlag": "wt",
+    "bsflag": 85
+  },
+  "fundmerge": {
+    "ajaxFlag": "wt",
+    "bsflag": 86
+  },
+  "cancel_entrust": {
+    "ajaxFlag": "stock_cancel"
+  },
+  "current_deal": {
+    "service_jsp": "/trade/webtrade/stock/stock_cj_query.jsp"
+  },
+  "account4stock": {
+    "service_jsp": "/trade/webtrade/zhgl/holderQuery.jsp"
+  }
+}

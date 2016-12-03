@@ -9,7 +9,9 @@ from .xq_follower import XueQiuFollower
 from .xqtrader import XueQiuTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
-
+from .zstrader import ZSTrader
+from .tdxdll import TDXDLL
+from .tdxtrader import TDXTrader
 
 def use(broker, debug=True, **kwargs):
     """用于生成特定的券商对象
@@ -29,13 +31,13 @@ def use(broker, debug=True, **kwargs):
         log.setLevel(logging.INFO)
     if broker.lower() in ['ht', '华泰']:
         return HTTrader(**kwargs)
-    if broker.lower() in ['yjb', '佣金宝']:
+    elif broker.lower() in ['yjb', '佣金宝']:
         return YJBTrader()
-    if broker.lower() in ['yh', '银河']:
+    elif broker.lower() in ['yh', '银河']:
         return YHTrader()
-    if broker.lower() in ['xq', '雪球']:
-        return XueQiuTrader(**kwargs)
-    if broker.lower() in ['gf', '广发']:
+    elif broker.lower() in ['xq', '雪球']:
+        return XueQiuTrader()
+    elif broker.lower() in ['gf', '广发']:
         return GFTrader()
     if broker.lower() in ['yh_client', '银河客户端']:
         from .yh_clienttrader import YHClientTrader
@@ -62,3 +64,9 @@ def follower(platform, **kwargs):
         return JoinQuantFollower()
     if platform.lower() in ['xq', 'xueqiu', '雪球']:
         return XueQiuFollower(**kwargs)
+    elif broker.lower() in ['zs', '招商']:
+        return ZSTrader()
+    elif broker.lower() in ['tdxxd', 'xdtdx', '信达tdx']:
+        return TDXTrader('tdxxd')
+    elif broker.lower() in ['yjbtdx', 'tdxyjb', '佣金宝tdx']:
+        return TDXTrader('tdxyjb')

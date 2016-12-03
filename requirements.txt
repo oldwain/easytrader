@@ -10,3 +10,6 @@ Pillow
 pytesseract
 pandas
 pyperclip
+numpy
+sklearn
+skimage
