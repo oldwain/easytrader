@@ -8,7 +8,6 @@ import re
 import requests
 
 from . import helpers
-from .helpers import EntrustProp
 from .log import log
 from .webtrader import WebTrader, NotLoginError
 
@@ -264,7 +263,7 @@ class ZSTrader(WebTrader):
             log.warning("撤单出错".format(e))
             return False
 
-    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
+    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop='limit'):
         """买入股票
         :param stock_code: 股票代码
         :param price: 买入价格
@@ -273,7 +272,7 @@ class ZSTrader(WebTrader):
         :param entrust_prop: 委托类型
         """
         market_type = helpers.get_stock_type(stock_code)
-        if entrust_prop == EntrustProp.Limit:
+        if entrust_prop == 'limit':
             bsflag = '0B'
         elif market_type == 'sh':
             bsflag = '0q'
@@ -287,7 +286,7 @@ class ZSTrader(WebTrader):
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
-    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
+    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop='limit'):
         """卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
@@ -296,7 +295,7 @@ class ZSTrader(WebTrader):
         :param entrust_prop: 委托类型
         """
         market_type = helpers.get_stock_type(stock_code)
-        if entrust_prop == EntrustProp.Limit:
+        if entrust_prop == 'limit':
             bsflag = '0S'
         elif market_type == 'sh':
             bsflag = '0r'

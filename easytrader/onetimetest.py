@@ -5,7 +5,7 @@
 
 
 import easytrader as et
-user = et.use('yh')
-user.prepare(r'd:\gitlocal\mystrategy\config\yh.json')
-a = user.get_ipo_limit('002830')
-print(a   )
+user = et.use('remote')
+user.prepare(r'd:\gitlocal\mystrategy\config\xqremote.json')
+#a = user.get_ipo_limit('002830')
+print(user.balance())

@@ -12,7 +12,6 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 from . import helpers
-from .helpers import EntrustProp
 from .log import log
 from .webtrader import WebTrader, NotLoginError
 
@@ -185,7 +184,7 @@ class YHTrader(WebTrader):
             f.write(verify_code_response.content)
 
         # 图片预处理
-        denoise("vcode",os.getcwd(),result_path="")
+        denoise("vcode", os.getcwd(),result_path="")
 
         # 逐个数字识别
         result = ""
@@ -343,6 +342,15 @@ class YHTrader(WebTrader):
             time.sleep(0.2)
         return result
 
+    def cancel_all(self):
+        cancels = self.check_available_cancels()
+        for cancel in cancels:
+            log.info('撤单:')
+            log.info(cancel)
+            self.cancel_entrusts(cancel['entrust_num'])
+
+        return True
+
     @property
     def current_deal(self):
         return self.get_current_deal()
@@ -382,7 +390,7 @@ class YHTrader(WebTrader):
             log.warning("撤单出错".format(e))
             return False
 
-    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
+    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop='limit'):
         """买入股票
         :param stock_code: 股票代码
         :param price: 买入价格
@@ -391,7 +399,7 @@ class YHTrader(WebTrader):
         :param entrust_prop: 委托类型
         """
         market_type = helpers.get_stock_type(stock_code)
-        if entrust_prop == EntrustProp.Limit:
+        if entrust_prop == 'limit':
             bsflag = '0B'
         elif market_type == 'sh':
             bsflag = '0q'
@@ -405,7 +413,7 @@ class YHTrader(WebTrader):
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
-    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
+    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop='limit'):
         """卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
@@ -414,7 +422,7 @@ class YHTrader(WebTrader):
         :param entrust_prop: 委托类型
         """
         market_type = helpers.get_stock_type(stock_code)
-        if entrust_prop == EntrustProp.Limit:
+        if entrust_prop == 'limit':
             bsflag = '0S'
         elif market_type == 'sh':
             bsflag = '0r'
@@ -598,7 +606,7 @@ class YHTrader(WebTrader):
     def check_account_live(self, response):
         if hasattr(response, 'get') and response.get('error_no') == '-1':
             self.heart_active = False
-            raise
+            raise Exception('account is not live!')
 
     def heartbeat(self):
         heartbeat_params = dict(

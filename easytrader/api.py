@@ -1,16 +1,49 @@
 # coding=utf-8
 import logging
-
-from .gftrader import GFTrader
-from .httrader import HTTrader
-from .joinquant_follower import JoinQuantFollower
 from .log import log
-from .xq_follower import XueQiuFollower
-from .xqtrader import XueQiuTrader
-from .yhtrader import YHTrader
-from .yjbtrader import YJBTrader
-from .zstrader import ZSTrader
-from .tdxtrader import TDXTrader
+
+try:
+    from .gftrader import GFTrader
+except:
+    pass
+try:
+    from .httrader import HTTrader
+except:
+    pass
+try:
+    from .joinquant_follower import JoinQuantFollower
+except:
+    pass
+try:
+    from .xq_follower import XueQiuFollower
+except:
+    pass
+try:
+    from .xqtrader import XueQiuTrader
+except:
+    pass
+
+try:
+    from .yhtrader import YHTrader
+except:
+    pass
+try:
+    from .yjbtrader import YJBTrader
+except:
+    pass
+try:
+    from .zstrader import ZSTrader
+except:
+    pass
+try:
+    from .tdxtrader import TDXTrader
+except:
+    pass
+
+try:
+    from .remotetrader import RemoteTrader
+except:
+    pass
 
 def use(broker, debug=True, **kwargs):
     """用于生成特定的券商对象
@@ -47,8 +80,14 @@ def use(broker, debug=True, **kwargs):
         return TDXTrader('tdxxd')
     elif broker.lower() in ['yjbtdx', 'tdxyjb', '佣金宝tdx']:
         return TDXTrader('tdxyjb')
+    elif broker.lower() in ['gftdx', 'tdxgf', '广发tdx']:
+        return TDXTrader('tdxgf')
+    elif broker.lower() in ['yhtdx', 'tdxyh', '银河tdx']:
+        return TDXTrader('tdxyh')
+    elif broker.lower() in ['remote']:
+        return RemoteTrader(**kwargs)
 
-
+'''
 def follower(platform, **kwargs):
     """用于生成特定的券商对象
     :param platform:平台支持 ['jq', 'joinquant', '聚宽’]
@@ -69,3 +108,4 @@ def follower(platform, **kwargs):
         return JoinQuantFollower()
     if platform.lower() in ['xq', 'xueqiu', '雪球']:
         return XueQiuFollower(**kwargs)
+'''

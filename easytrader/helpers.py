@@ -16,7 +16,7 @@ from requests.packages.urllib3.poolmanager import PoolManager
 from six.moves import input
 
 from .log import log
-from .thirdlibrary.yjb_captcha import YJBCaptcha
+# from .thirdlibrary.yjb_captcha import YJBCaptcha
 
 if six.PY2:
     from io import open
